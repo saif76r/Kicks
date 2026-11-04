@@ -16,6 +16,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../lib/firebase';
 import { Product, Order, StoreSettings, UserProfile, OrderStatus, PaymentStatus } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_SETTINGS } from '../lib/defaultData';
+import { normalizeImageUrl } from '../lib/imageHelper';
 
 const PRODUCTS_COLLECTION = 'products';
 const ORDERS_COLLECTION = 'orders';
@@ -39,7 +40,16 @@ export function subscribeToProducts(onData: (products: Product[]) => void): () =
           onData(INITIAL_PRODUCTS);
         }
       } else {
-        const prods = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+        const prods = snapshot.docs.map(d => {
+          const data = d.data() as Product;
+          return {
+            ...data,
+            id: d.id,
+            images: (data.images && data.images.length > 0)
+              ? data.images.map(img => normalizeImageUrl(img))
+              : [normalizeImageUrl(null)]
+          };
+        });
         onData(prods);
       }
     }, (error) => {

@@ -17,6 +17,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { placeOrder } from '../services/storeService';
 import { Order, PaymentMethod, PaymentStatus, OrderStatus } from '../types';
+import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../lib/imageHelper';
 
 interface CheckoutViewProps {
   onBackToCart: () => void;
@@ -611,8 +612,11 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
               {items.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 text-xs">
                   <img
-                    src={item.product.images[0] || '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'}
+                    src={normalizeImageUrl(item.product.images[0])}
                     alt={item.product.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                    }}
                     className="w-12 h-12 rounded-lg object-cover bg-stone-200 shrink-0 border border-black/5"
                   />
                   <div className="flex-1 min-w-0">

@@ -16,6 +16,7 @@ import {
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { ProductCard } from '../components/ProductCard';
+import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../lib/imageHelper';
 
 interface ProductDetailViewProps {
   product: Product;
@@ -83,8 +84,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         <div className="lg:col-span-7 space-y-4">
           <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden skeuo-surface p-3 bg-white">
             <img
-              src={product.images[activeImageIndex] || product.images[0]}
+              src={normalizeImageUrl(product.images[activeImageIndex] || product.images[0])}
               alt={product.name}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+              }}
               className="w-full h-full object-cover rounded-2xl transition-all duration-300"
             />
             {discountPercent && (
@@ -107,7 +111,14 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       : 'border-transparent opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover rounded-lg" />
+                  <img 
+                    src={normalizeImageUrl(img)} 
+                    alt={`View ${idx + 1}`} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                    }}
+                    className="w-full h-full object-cover rounded-lg" 
+                  />
                 </button>
               ))}
             </div>

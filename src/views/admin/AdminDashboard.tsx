@@ -38,6 +38,7 @@ import {
 } from '../../services/storeService';
 import { useAuth, DEFAULT_ADMIN_EMAIL } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../../lib/imageHelper';
 
 interface AdminDashboardProps {
   products: Product[];
@@ -138,7 +139,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setPStock(12);
     setPSizes([40, 41, 42, 43, 44]);
     setPDescription('Crafted with premium materials for unmatched comfort, longevity, and street style.');
-    setPImages(['/src/assets/images/kicks_hero_sneaker_1793611731340.jpg']);
+    setPImages([DEFAULT_PRODUCT_IMAGE]);
     setPFeatured(false);
     setPNewArrival(true);
     setPMaterials('Full-Grain Leather, EVA Cushioning, Rubber Outsole');
@@ -205,7 +206,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         stock: Number(pStock),
         availableSizes: pSizes.length > 0 ? pSizes : [40, 41, 42, 43],
         description: pDescription.trim(),
-        images: pImages.length > 0 ? pImages : ['/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'],
+        images: pImages.length > 0 ? pImages : [DEFAULT_PRODUCT_IMAGE],
         featured: pFeatured,
         newArrival: pNewArrival,
         materials: pMaterials.trim(),
@@ -533,8 +534,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <td className="py-3 px-3">
                           <div className="flex items-center gap-3">
                             <img
-                              src={prod.images[0] || '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'}
+                              src={normalizeImageUrl(prod.images[0])}
                               alt={prod.name}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                              }}
                               className="w-12 h-12 rounded-lg object-cover bg-stone-200 border border-black/5 shrink-0"
                             />
                             <div>
@@ -732,7 +736,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         {ord.items.map((it, i) => (
                           <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-white border border-black/5 text-xs">
-                            <img src={it.image || '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'} alt={it.name} className="w-10 h-10 rounded object-cover" />
+                            <img 
+                              src={normalizeImageUrl(it.image)} 
+                              alt={it.name} 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                              }}
+                              className="w-10 h-10 rounded object-cover" 
+                            />
                             <div className="min-w-0 flex-1">
                               <p className="font-semibold text-stone-900 truncate">{it.name}</p>
                               <p className="text-[10px] font-mono text-stone-500">Size {it.size} · Qty {it.quantity} · {settings.currencySymbol}{it.price.toLocaleString()}</p>

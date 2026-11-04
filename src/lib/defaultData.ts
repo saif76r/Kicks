@@ -25,8 +25,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 14,
     availableSizes: [40, 41, 42, 43, 44, 45],
     images: [
-      '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg',
-      '/src/assets/images/sneaker_runner_velocity_1793611731024.jpg'
+      '/assets/images/kicks_hero_sneaker_1793611731340.jpg',
+      '/assets/images/sneaker_runner_velocity_1793611731024.jpg'
     ],
     description: 'Engineered for high-intensity movement and boundary-pushing road runs. Features dual-density nitrogen-infused foam, structured carbon shank, and hyper-breathable engineered monomesh upper with dynamic stability cradles.',
     featured: true,
@@ -46,8 +46,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 8,
     availableSizes: [39, 40, 41, 42, 43, 44],
     images: [
-      '/src/assets/images/sneaker_air_pulse_1793611730783.jpg',
-      '/src/assets/images/sneaker_urban_court_1793611730956.jpg'
+      '/assets/images/sneaker_air_pulse_1793611730783.jpg',
+      '/assets/images/sneaker_urban_court_1793611730956.jpg'
     ],
     description: 'An elevated street icon. Crafted with full-grain off-white calfskin leather, supple dark charcoal suede overlays, padded ankle collar, and tactile industrial orange rope laces with metal eyelets.',
     featured: true,
@@ -67,8 +67,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 12,
     availableSizes: [40, 41, 42, 43, 44, 45],
     images: [
-      '/src/assets/images/sneaker_runner_velocity_1793611731024.jpg',
-      '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'
+      '/assets/images/sneaker_runner_velocity_1793611731024.jpg',
+      '/assets/images/kicks_hero_sneaker_1793611731340.jpg'
     ],
     description: 'World Athletics regulation race-day shoe. Dual carbon-composite rocker plate designed to propel forward momentum with max-energy return EnergyFoam cushioning.',
     featured: true,
@@ -88,8 +88,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 19,
     availableSizes: [39, 40, 41, 42, 43, 44, 45],
     images: [
-      '/src/assets/images/sneaker_urban_court_1793611730956.jpg',
-      '/src/assets/images/sneaker_air_pulse_1793611730783.jpg'
+      '/assets/images/sneaker_urban_court_1793611730956.jpg',
+      '/assets/images/sneaker_air_pulse_1793611730783.jpg'
     ],
     description: 'Timeless minimalism in its purest form. Soft pebble-textured chalk leather, hand-stitched reinforcement panels, vegetable-tanned leather footbed, and honey gum rubber outsole.',
     featured: true,
@@ -109,8 +109,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 7,
     availableSizes: [41, 42, 43, 44, 45],
     images: [
-      '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg',
-      '/src/assets/images/sneaker_air_pulse_1793611730783.jpg'
+      '/assets/images/kicks_hero_sneaker_1793611731340.jpg',
+      '/assets/images/sneaker_air_pulse_1793611730783.jpg'
     ],
     description: 'High-octane indoor hardwood court performance. Multidirectional herringbone traction pods, internal TPU torsion bridge, and dynamic lace lock system for lockdown defense.',
     featured: false,
@@ -130,8 +130,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 5,
     availableSizes: [40, 41, 42, 43, 44],
     images: [
-      '/src/assets/images/sneaker_urban_court_1793611730956.jpg',
-      '/src/assets/images/sneaker_air_pulse_1793611730783.jpg'
+      '/assets/images/sneaker_urban_court_1793611730956.jpg',
+      '/assets/images/sneaker_air_pulse_1793611730783.jpg'
     ],
     description: 'Handcrafted Goodyear welted derby shoes made from vegetable-tanned Italian calfskin. Hand-burnished espresso finish with stacked leather heel and Goodyear storm welt.',
     featured: true,
@@ -151,8 +151,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 16,
     availableSizes: [40, 41, 42, 43, 44],
     images: [
-      '/src/assets/images/sneaker_runner_velocity_1793611731024.jpg',
-      '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'
+      '/assets/images/sneaker_runner_velocity_1793611731024.jpg',
+      '/assets/images/kicks_hero_sneaker_1793611731340.jpg'
     ],
     description: 'Multi-discipline gym and HIIT cross-trainer. Wide flat heel provides sturdy lifting platform, while flex-grooves on the forefoot allow explosive plyometric sprints.',
     featured: false,
@@ -172,8 +172,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     stock: 9,
     availableSizes: [39, 40, 41, 42, 43, 44],
     images: [
-      '/src/assets/images/sneaker_urban_court_1793611730956.jpg',
-      '/src/assets/images/sneaker_air_pulse_1793611730783.jpg'
+      '/assets/images/sneaker_urban_court_1793611730956.jpg',
+      '/assets/images/sneaker_air_pulse_1793611730783.jpg'
     ],
     description: 'Effortless slip-on comfort made from water-resistant split suede with unlined vamp for airy breathability during summer days or casual meetings.',
     featured: false,
@@ -189,31 +189,31 @@ export const CATEGORIES_METADATA: { name: ShoeCategory; description: string; ima
   {
     name: 'Sneakers',
     description: 'Iconic street style, heritage silhouettes & limited drops',
-    image: '/src/assets/images/sneaker_air_pulse_1793611730783.jpg',
+    image: '/assets/images/sneaker_air_pulse_1793611730783.jpg',
     count: 24
   },
   {
     name: 'Running Shoes',
     description: 'Nitrogen foam, carbon plates & aerodynamic performance',
-    image: '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg',
+    image: '/assets/images/kicks_hero_sneaker_1793611731340.jpg',
     count: 18
   },
   {
     name: 'Sports Shoes',
     description: 'Court-ready grip, basketball lockdown & training support',
-    image: '/src/assets/images/sneaker_runner_velocity_1793611731024.jpg',
+    image: '/assets/images/sneaker_runner_velocity_1793611731024.jpg',
     count: 15
   },
   {
     name: 'Casual Shoes',
     description: 'Clean leather low-tops, retro sneakers & slip-ons',
-    image: '/src/assets/images/sneaker_urban_court_1793611730956.jpg',
+    image: '/assets/images/sneaker_urban_court_1793611730956.jpg',
     count: 21
   },
   {
     name: 'Formal Shoes',
     description: 'Goodyear welted derbies, oxfords & handcrafted leather',
-    image: '/src/assets/images/sneaker_urban_court_1793611730956.jpg',
+    image: '/assets/images/sneaker_urban_court_1793611730956.jpg',
     count: 9
   }
 ];

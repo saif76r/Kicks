@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Trash2, ArrowRight, ShoppingBag, ShieldCheck, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../lib/imageHelper';
 
 interface CartDrawerProps {
   onCheckout: () => void;
@@ -112,8 +113,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ onCheckout, onExplore })
                 >
                   {/* Thumbnail */}
                   <img
-                    src={item.product.images[0] || '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'}
+                    src={normalizeImageUrl(item.product.images[0])}
                     alt={item.product.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                    }}
                     className="w-20 h-20 rounded-lg object-cover bg-stone-200 shrink-0 border border-black/5"
                   />
 

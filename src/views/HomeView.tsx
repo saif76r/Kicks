@@ -90,7 +90,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <div className="lg:col-span-5 relative">
                 <div className="relative aspect-[4/3] sm:aspect-square w-full rounded-2xl overflow-hidden skeuo-surface p-3 group">
                   <img
-                    src="/src/assets/images/kicks_hero_sneaker_1793611731340.jpg"
+                    src="/assets/images/kicks_hero_sneaker_1793611731340.jpg"
                     alt="KICKS Nitro Apex Sneaker"
                     className="w-full h-full object-cover rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-500"
                   />

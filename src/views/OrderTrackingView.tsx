@@ -15,6 +15,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Order, OrderStatus } from '../types';
 import { useCart } from '../context/CartContext';
+import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../lib/imageHelper';
 
 interface OrderTrackingViewProps {
   initialOrderId?: string;
@@ -293,8 +294,11 @@ export const OrderTrackingView: React.FC<OrderTrackingViewProps> = ({
               {currentOrder.items.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3 p-3 rounded-xl skeuo-inset-light">
                   <img
-                    src={item.image || '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'}
+                    src={normalizeImageUrl(item.image)}
                     alt={item.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                    }}
                     className="w-12 h-12 rounded-lg object-cover bg-stone-200"
                   />
                   <div className="flex-1 min-w-0">

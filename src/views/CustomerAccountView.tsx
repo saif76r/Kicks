@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Order, OrderStatus } from '../types';
 import { subscribeToOrders } from '../services/storeService';
+import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../lib/imageHelper';
 
 interface CustomerAccountViewProps {
   initialTab?: 'orders' | 'profile';
@@ -239,8 +240,11 @@ export const CustomerAccountView: React.FC<CustomerAccountViewProps> = ({
                   {order.items.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3 p-2.5 rounded-xl bg-stone-100/60 border border-black/5">
                       <img
-                        src={item.image || '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'}
+                        src={normalizeImageUrl(item.image)}
                         alt={item.name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
+                        }}
                         className="w-12 h-12 rounded-lg object-cover bg-stone-200 shrink-0"
                       />
                       <div className="min-w-0 flex-1">

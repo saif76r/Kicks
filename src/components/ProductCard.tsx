@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShoppingBag, Eye, Check } from 'lucide-react';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
+import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../lib/imageHelper';
 
 interface ProductCardProps {
   product: Product;
@@ -36,13 +37,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
       {/* Visual Image Container - 4:3 aspect ratio */}
       <div className="relative aspect-[4/3] w-full bg-[#ECECE9] overflow-hidden">
         <img
-          src={product.images[0] || '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg'}
+          src={normalizeImageUrl(product.images[0])}
           alt={product.name}
-          referrerPolicy="no-referrer"
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300 ease-out"
           onError={(e) => {
-            // graceful fallback
-            (e.target as HTMLImageElement).src = '/src/assets/images/kicks_hero_sneaker_1793611731340.jpg';
+            (e.target as HTMLImageElement).src = DEFAULT_PRODUCT_IMAGE;
           }}
         />
 
