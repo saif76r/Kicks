@@ -1,0 +1,6 @@
+{
+  "name": "KICKS – Modern Shoe E-Commerce & Admin Platform",
+  "description": "Premium modern shoe shopping experience and secure admin management portal with real-time Firebase sync, bKash/Nagad and COD payments, order tracking, and inventory control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
