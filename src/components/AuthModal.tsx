@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ShieldAlert, Lock, Mail, User as UserIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { useAuth, DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -270,21 +270,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </>
             )}
           </button>
-
-          {mode === 'login' && (
-            <div className="pt-2 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail(DEFAULT_ADMIN_EMAIL);
-                  setPassword(DEFAULT_ADMIN_PASSWORD);
-                }}
-                className="w-full py-2 px-3 rounded-xl border border-dashed border-stone-300 text-stone-500 hover:text-stone-800 hover:border-stone-400 hover:bg-stone-100/50 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all"
-              >
-                <span>Admin Quick-Fill ({DEFAULT_ADMIN_EMAIL})</span>
-              </button>
-            </div>
-          )}
         </form>
 
         {/* Footer switch */}
