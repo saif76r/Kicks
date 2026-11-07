@@ -104,7 +104,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           phone: phone.trim(),
           address: address.trim(),
           city: city.trim(),
-          notes: notes.trim()
+          notes: notes.trim() || ''
         },
         items: items.map(item => ({
           productId: item.productId,
@@ -121,8 +121,8 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         paymentMethod,
         paymentDetails: {
           method: paymentMethod,
-          senderNumber: senderNumber.trim() || undefined,
-          transactionId: transactionId.trim() ? transactionId.trim().toUpperCase() : undefined,
+          senderNumber: paymentMethod === 'cod' ? 'Cash on Delivery' : (senderNumber.trim() || 'N/A'),
+          transactionId: paymentMethod === 'cod' ? 'COD' : (transactionId.trim() ? transactionId.trim().toUpperCase() : 'N/A'),
           amount: total
         },
         paymentStatus,

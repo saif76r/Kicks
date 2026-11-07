@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth, isAuthorizedAdminEmail } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -225,8 +225,8 @@ function MainApp() {
         onClose={() => setIsAuthModalOpen(false)}
         onSuccess={(signedInEmail) => {
           if (
-            signedInEmail?.trim().toLowerCase() === 'mdsaifmeer9@gmail.com' ||
-            currentUser?.email?.toLowerCase() === 'mdsaifmeer9@gmail.com' ||
+            isAuthorizedAdminEmail(signedInEmail) ||
+            isAuthorizedAdminEmail(currentUser?.email) ||
             isAdmin
           ) {
             setCurrentView('admin');

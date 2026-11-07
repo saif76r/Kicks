@@ -18,11 +18,9 @@ import {
   ShieldCheck, 
   DollarSign, 
   ArrowUpRight,
-  Database,
   ExternalLink,
   Save,
-  Check,
-  UploadCloud
+  Check
 } from 'lucide-react';
 import { Product, Order, UserProfile, StoreSettings, OrderStatus, PaymentStatus, ShoeCategory } from '../../types';
 import { 
@@ -33,8 +31,7 @@ import {
   saveStoreSettings, 
   uploadProductImage,
   subscribeToOrders,
-  subscribeToCustomers,
-  seedFirestoreDatabase
+  subscribeToCustomers
 } from '../../services/storeService';
 import { useAuth, DEFAULT_ADMIN_EMAIL } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -52,7 +49,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const { currentUser, userProfile, isAdmin } = useAuth();
   const { settings } = useCart();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'settings' | 'security'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'customers' | 'settings'>('overview');
 
   // Real-time Orders & Customers state
   const [orders, setOrders] = useState<Order[]>([]);
@@ -298,7 +295,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </span>
             </h1>
             <p className="text-[11px] text-stone-400">
-              Connected to Firebase Project: <strong className="font-mono text-white">kicks-8867d</strong>
+              Live Store Operations & Orders Management
             </p>
           </div>
         </div>
@@ -326,8 +323,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             { id: 'products', label: `Products (${products.length})`, icon: Package },
             { id: 'orders', label: `Orders (${orders.length})`, icon: ShoppingBag },
             { id: 'customers', label: `Customers (${customers.length})`, icon: Users },
-            { id: 'settings', label: 'Payment & Delivery Config', icon: SettingsIcon },
-            { id: 'security', label: 'Firebase Rules & DB', icon: Database }
+            { id: 'settings', label: 'Payment & Delivery Config', icon: SettingsIcon }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -467,10 +463,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </td>
                         <td className="py-3 px-3 text-stone-600">{ord.customerDetails.city}</td>
                         <td className="py-3 px-3 uppercase font-mono font-bold text-[11px] text-stone-700">
-                          {ord.paymentMethod}
+                          {ord.paymentMethod === 'cod' ? (
+                            <span className="text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">COD</span>
+                          ) : (
+                            ord.paymentMethod
+                          )}
                         </td>
                         <td className="py-3 px-3 font-mono text-stone-600">
-                          {ord.paymentDetails?.transactionId || 'COD'}
+                          {ord.paymentMethod === 'cod' ? 'Cash on Delivery' : (ord.paymentDetails?.transactionId || 'N/A')}
                         </td>
                         <td className="py-3 px-3">
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-stone-200 text-stone-800">
@@ -714,14 +714,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       {/* Col 3: Payment Details */}
                       <div className="p-3.5 rounded-xl bg-stone-100/60 space-y-1">
                         <span className="text-[10px] font-bold uppercase text-stone-400">Payment Breakdown</span>
-                        <p className="font-bold uppercase text-stone-900">Method: {ord.paymentMethod}</p>
-                        {ord.paymentDetails?.transactionId && (
-                          <p className="font-mono text-stone-900">
-                            TrxID: <strong className="text-[#FF6B35] font-black">{ord.paymentDetails.transactionId}</strong>
-                          </p>
-                        )}
-                        {ord.paymentDetails?.senderNumber && (
-                          <p className="font-mono text-stone-700">Sender: {ord.paymentDetails.senderNumber}</p>
+                        <p className="font-bold uppercase text-stone-900">
+                          Method: {ord.paymentMethod === 'cod' ? 'Cash on Delivery (ক্যাশ অন ডেলিভারি)' : ord.paymentMethod}
+                        </p>
+                        {ord.paymentMethod === 'cod' ? (
+                          <div className="pt-0.5">
+                            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded inline-block">
+                              পণ্য হাতে পাওয়ার পর মূল্য পরিশোধ
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            {ord.paymentDetails?.transactionId && (
+                              <p className="font-mono text-stone-900">
+                                TrxID: <strong className="text-[#FF6B35] font-black">{ord.paymentDetails.transactionId}</strong>
+                              </p>
+                            )}
+                            {ord.paymentDetails?.senderNumber && (
+                              <p className="font-mono text-stone-700">Sender: {ord.paymentDetails.senderNumber}</p>
+                            )}
+                          </>
                         )}
                         <p className="font-mono font-black text-sm text-stone-900 pt-1">
                           Total: {settings.currencySymbol}{ord.totalAmount.toLocaleString()}
@@ -988,87 +1000,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </button>
 
             </form>
-          </div>
-        )}
-
-        {/* 6. SECURITY & FIREBASE RULES TAB */}
-        {activeTab === 'security' && (
-          <div className="max-w-3xl space-y-6 animate-in fade-in duration-150">
-            <div>
-              <h2 className="font-display font-bold text-xl text-stone-900">
-                Firebase Security Rules & Cloud Architecture
-              </h2>
-              <p className="text-xs text-stone-500">
-                Recommended production rules for your Firebase console at <code className="font-mono">kicks-8867d</code>.
-              </p>
-            </div>
-
-            <div className="rounded-3xl skeuo-card p-6 sm:p-8 space-y-4">
-              <div className="flex items-center gap-2 text-[#FF6B35] font-bold text-xs uppercase tracking-wider">
-                <Database className="w-4 h-4" />
-                <span>Cloud Firestore Rules (firestore.rules)</span>
-              </div>
-              <pre className="p-4 rounded-2xl bg-stone-950 text-emerald-400 font-mono text-[11px] overflow-x-auto leading-relaxed">
-{`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Check if authenticated user is admin
-    function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.admin == true ||
-        request.auth.token.email == "${DEFAULT_ADMIN_EMAIL}" ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
-    }
-    
-    // Products: Public can read, only admin can create, update, delete
-    match /products/{productId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Settings: Public can read store info, only admin can write
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    // Users: Users can read/write their own profile; admin has full access
-    match /users/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
-    }
-    
-    // Orders: Users can read/create their own orders; admin can read/update all
-    match /orders/{orderId} {
-      allow create: if true;
-      allow read, update: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
-      allow delete: if isAdmin();
-    }
-  }
-}`}
-              </pre>
-            </div>
-
-            <div className="rounded-3xl skeuo-card p-6 sm:p-8 space-y-4">
-              <div className="flex items-center gap-2 text-stone-900 font-bold text-xs uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Cloud Storage Rules (storage.rules)</span>
-              </div>
-              <pre className="p-4 rounded-2xl bg-stone-950 text-cyan-400 font-mono text-[11px] overflow-x-auto leading-relaxed">
-{`rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /products/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-  }
-}`}
-              </pre>
-            </div>
-
           </div>
         )}
 

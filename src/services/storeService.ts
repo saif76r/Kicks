@@ -133,12 +133,67 @@ export async function uploadProductImage(file: File): Promise<string> {
   }
 }
 
+/**
+ * Recursively removes undefined values and ensures all nested properties
+ * are safe for Firestore document insertion.
+ */
+export function cleanForFirestore<T>(data: T): T {
+  if (data === undefined) {
+    return '' as any;
+  }
+  if (data === null) {
+    return null as any;
+  }
+  if (Array.isArray(data)) {
+    return data.map(item => cleanForFirestore(item)) as any;
+  }
+  if (typeof data === 'object' && !(data instanceof Date)) {
+    const cleaned: Record<string, any> = {};
+    for (const [key, value] of Object.entries(data as Record<string, any>)) {
+      if (value !== undefined) {
+        cleaned[key] = cleanForFirestore(value);
+      }
+    }
+    return cleaned as any;
+  }
+  return data;
+}
+
+/**
+ * Syncs any local orders that were saved offline or during connection errors to Firestore.
+ */
+export async function syncLocalOrdersToFirestore(): Promise<void> {
+  try {
+    const localOrders: Order[] = JSON.parse(localStorage.getItem('kicks_local_orders') || '[]');
+    if (!localOrders || localOrders.length === 0) return;
+
+    for (const ord of localOrders) {
+      try {
+        const orderDocRef = doc(db, ORDERS_COLLECTION, ord.id);
+        const snap = await getDoc(orderDocRef);
+        if (!snap.exists()) {
+          const sanitized = cleanForFirestore(ord);
+          await setDoc(orderDocRef, sanitized);
+          console.log(`Synced local order ${ord.id} to Firestore.`);
+        }
+      } catch (err) {
+        // Ignore individual sync errors
+      }
+    }
+  } catch (err) {
+    console.warn('syncLocalOrdersToFirestore error:', err);
+  }
+}
+
 // Orders Subscription
 export function subscribeToOrders(
   userId: string | null,
   isAdmin: boolean,
   onData: (orders: Order[]) => void
 ): () => void {
+  // Trigger background sync of any previously unsynced local orders
+  syncLocalOrdersToFirestore();
+
   try {
     const ordersRef = collection(db, ORDERS_COLLECTION);
     let q;
@@ -155,10 +210,25 @@ export function subscribeToOrders(
     }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Order));
-      // Sort in memory if composite index is pending
-      orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      onData(orders);
+      const firestoreOrders = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Order));
+      
+      // Merge with locally saved orders to ensure 100% visibility even if sync is in progress
+      const savedOrders: Order[] = JSON.parse(localStorage.getItem('kicks_local_orders') || '[]');
+      const orderMap = new Map<string, Order>();
+
+      savedOrders.forEach(o => {
+        if (isAdmin || (userId && o.userId === userId)) {
+          orderMap.set(o.id, o);
+        }
+      });
+
+      firestoreOrders.forEach(o => {
+        orderMap.set(o.id, o);
+      });
+
+      const mergedOrders = Array.from(orderMap.values());
+      mergedOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      onData(mergedOrders);
     }, (err) => {
       console.warn('Orders listener error (using fallback local store):', err);
       // Read from local storage fallback
@@ -185,9 +255,13 @@ export async function placeOrder(orderData: Omit<Order, 'id'>): Promise<string> 
     id: orderId
   };
 
+  // Deep sanitize to guarantee NO undefined properties reach Firestore
+  const sanitizedOrder = cleanForFirestore(fullOrder);
+
   try {
     const orderDocRef = doc(db, ORDERS_COLLECTION, orderId);
-    await setDoc(orderDocRef, fullOrder);
+    await setDoc(orderDocRef, sanitizedOrder);
+    console.log(`Order ${orderId} successfully stored in Firestore.`);
 
     // Atomically decrement stock in Firestore if possible
     for (const item of orderData.items) {
@@ -206,7 +280,7 @@ export async function placeOrder(orderData: Omit<Order, 'id'>): Promise<string> 
       }
     }
   } catch (err) {
-    console.warn('Firestore order placement encountered an error, saving to local persistent backup:', err);
+    console.error('Firestore order placement encountered an error, saving to local persistent backup:', err);
   }
 
   // Backup to localStorage so PC/phone can track even if offline

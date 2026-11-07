@@ -11,11 +11,12 @@ import {
   AlertCircle,
   Phone
 } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Order, OrderStatus } from '../types';
 import { useCart } from '../context/CartContext';
 import { normalizeImageUrl, DEFAULT_PRODUCT_IMAGE } from '../lib/imageHelper';
+import { cleanForFirestore } from '../services/storeService';
 
 interface OrderTrackingViewProps {
   initialOrderId?: string;
@@ -56,6 +57,11 @@ export const OrderTrackingView: React.FC<OrderTrackingViewProps> = ({
       if (match) {
         setCurrentOrder(match);
         setSearching(false);
+        // Sync to Firestore in background
+        try {
+          const syncDocRef = doc(db, 'orders', match.id);
+          setDoc(syncDocRef, cleanForFirestore(match)).catch(() => {});
+        } catch (_) {}
         return;
       }
 

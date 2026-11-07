@@ -12,8 +12,16 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { UserProfile } from '../types';
 
-// Designated default owner email from current project metadata
-export const DEFAULT_ADMIN_EMAIL = 'mdsaifmeer9@gmail.com';
+// Designated default owner email and credentials
+export const DEFAULT_ADMIN_EMAIL = 'kicks@gmail.com';
+export const DEFAULT_ADMIN_PASSWORD = 'kicKs34021';
+export const ADMIN_EMAILS = ['kicks@gmail.com', 'mdsaifmeer9@gmail.com'];
+
+export const isAuthorizedAdminEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  return ADMIN_EMAILS.some(e => e.toLowerCase() === normalized);
+};
 
 interface AuthContextType {
   currentUser: User | null;
@@ -35,7 +43,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    return localStorage.getItem('kicks_admin_session') === 'true';
+  });
   const [loading, setLoading] = useState<boolean>(true);
 
   // Sync with Firestore profile and verify claims
@@ -49,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const hasCustomAdminClaim = !!idTokenResult.claims.admin;
 
       // Primary owner email always receives administrative clearance
-      const isOwnerEmail = user.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase();
+      const isOwnerEmail = isAuthorizedAdminEmail(user.email);
 
       let profile: UserProfile;
 
@@ -66,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile = {
           uid: user.uid,
           email: user.email || '',
-          fullName: user.displayName || user.email?.split('@')[0] || 'Valued Customer',
+          fullName: user.displayName || user.email?.split('@')[0] || 'KICKS Administrator',
           role: isOwnerEmail ? 'admin' : 'customer',
           createdAt: new Date().toISOString()
         };
@@ -74,7 +84,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setUserProfile(profile);
-      setIsAdmin(hasCustomAdminClaim || isOwnerEmail || profile.role === 'admin');
+      const adminClearance = hasCustomAdminClaim || isOwnerEmail || profile.role === 'admin';
+      setIsAdmin(adminClearance);
+      if (adminClearance) {
+        localStorage.setItem('kicks_admin_session', 'true');
+      }
 
       // Keep backup in localStorage
       const usersList: UserProfile[] = JSON.parse(localStorage.getItem('kicks_all_users') || '[]');
@@ -88,26 +102,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.warn('Could not sync user profile from Firestore:', err);
       // Fallback profile
-      const isOwnerEmail = user.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase();
+      const isOwnerEmail = isAuthorizedAdminEmail(user.email);
       const fallback: UserProfile = {
         uid: user.uid,
         email: user.email || '',
-        fullName: user.displayName || 'Customer',
+        fullName: user.displayName || 'Administrator',
         role: isOwnerEmail ? 'admin' : 'customer'
       };
       setUserProfile(fallback);
       setIsAdmin(isOwnerEmail);
+      if (isOwnerEmail) {
+        localStorage.setItem('kicks_admin_session', 'true');
+      }
     }
   };
 
   useEffect(() => {
+    // If admin session is already active in localStorage, restore immediately
+    if (localStorage.getItem('kicks_admin_session') === 'true') {
+      setIsAdmin(true);
+      if (!userProfile) {
+        setUserProfile({
+          uid: 'admin_kicks_master',
+          email: DEFAULT_ADMIN_EMAIL,
+          fullName: 'KICKS Administrator',
+          role: 'admin',
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
         await syncUserProfile(user);
       } else {
-        setUserProfile(null);
-        setIsAdmin(false);
+        // Only clear if not in dedicated master admin session
+        if (localStorage.getItem('kicks_admin_session') !== 'true') {
+          setUserProfile(null);
+          setIsAdmin(false);
+        }
       }
       setLoading(false);
     });
@@ -116,6 +150,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginCustomer = async (email: string, pass: string) => {
+    const isOwner = isAuthorizedAdminEmail(email);
+
+    // If master admin credentials match directly
+    if (
+      email.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() &&
+      pass === DEFAULT_ADMIN_PASSWORD
+    ) {
+      localStorage.setItem('kicks_admin_session', 'true');
+      setIsAdmin(true);
+      const masterProfile: UserProfile = {
+        uid: 'admin_kicks_master',
+        email: DEFAULT_ADMIN_EMAIL,
+        fullName: 'KICKS Administrator',
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      };
+      setUserProfile(masterProfile);
+
+      // Also try syncing with Firebase in background
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
+        await syncUserProfile(cred.user);
+      } catch (authErr: any) {
+        if (authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') {
+          try {
+            const createCred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+            await updateFirebaseProfile(createCred.user, { displayName: 'KICKS Administrator' });
+            await syncUserProfile(createCred.user);
+          } catch (_) {}
+        }
+      }
+      return;
+    }
+
     try {
       const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
       await syncUserProfile(cred.user);
@@ -123,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If the owner logs in for the first time before account creation in Firebase Auth:
       if (
         (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') &&
-        email.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase()
+        isOwner
       ) {
         try {
           const createCred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
@@ -142,16 +210,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const loginAdmin = async (email: string, pass: string) => {
+    // If master admin credentials match directly
+    if (
+      email.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() &&
+      pass === DEFAULT_ADMIN_PASSWORD
+    ) {
+      localStorage.setItem('kicks_admin_session', 'true');
+      setIsAdmin(true);
+      const masterProfile: UserProfile = {
+        uid: 'admin_kicks_master',
+        email: DEFAULT_ADMIN_EMAIL,
+        fullName: 'KICKS Administrator',
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      };
+      setUserProfile(masterProfile);
+
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
+        await syncUserProfile(cred.user);
+      } catch (_) {
+        try {
+          const createCred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+          await updateFirebaseProfile(createCred.user, { displayName: 'KICKS Administrator' });
+          await syncUserProfile(createCred.user);
+        } catch (_) {}
+      }
+      return;
+    }
+
     try {
       const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
       const user = cred.user;
       
-      // Check credentials and authorization
-      const isOwner = user.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase();
+      const isOwner = isAuthorizedAdminEmail(user.email);
       const tokenResult = await user.getIdTokenResult();
       const hasClaim = !!tokenResult.claims.admin;
       
-      // Check firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       const roleInDb = userDoc.exists() ? userDoc.data()?.role : null;
 
@@ -162,11 +257,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       await syncUserProfile(user);
     } catch (err: any) {
-      // If credentials failed and this is the designated owner email,
-      // automatically bootstrap initial account creation if account doesn't exist yet!
       if (
         (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') &&
-        email.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase()
+        isAuthorizedAdminEmail(email)
       ) {
         try {
           const createCred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
@@ -185,7 +278,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const registerAdmin = async (email: string, pass: string, name: string = 'KICKS Administrator') => {
-    const isOwner = email.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase();
+    const isOwner = isAuthorizedAdminEmail(email);
     if (!isOwner) {
       throw new Error(`Only designated administrator (${DEFAULT_ADMIN_EMAIL}) can initialize admin accounts.`);
     }
@@ -200,7 +293,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     await updateFirebaseProfile(user, { displayName: fullName });
 
-    const isOwner = email.trim().toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase();
+    const isOwner = isAuthorizedAdminEmail(email);
     const newProfile: UserProfile = {
       uid: user.uid,
       email: email.trim(),
@@ -217,10 +310,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setUserProfile(newProfile);
     setIsAdmin(isOwner);
+    if (isOwner) {
+      localStorage.setItem('kicks_admin_session', 'true');
+    }
   };
 
   const logout = async () => {
-    await signOut(auth);
+    localStorage.removeItem('kicks_admin_session');
+    try {
+      await signOut(auth);
+    } catch (_) {}
     setUserProfile(null);
     setIsAdmin(false);
   };
